@@ -1,0 +1,20 @@
+# Ignore virtual environment and Python compiled files
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Ignore environment variables containing secrets
+.env
+
+# Ignore git internals
+.git/
+
+# Ignore JS/Node modules if present
+node_modules/
+package-lock.json
+
+# Ignore IDE files
+.vscode/
+.idea/
+.cursor/

@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+sqlalchemy[asyncio]
+aiomysql
+numpy
+google-auth
+pydantic[email]
+python-dotenv
+pywebpush
+apscheduler
+websockets
+cryptography
+pytest
+httpx
+requests

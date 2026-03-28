@@ -1,0 +1,1 @@
+web: uv run --with fastapi,uvicorn[standard],sqlalchemy[asyncio],aiomysql,numpy,google-auth,pydantic[email],python-dotenv,pywebpush,apscheduler,websockets,cryptography,pytest,httpx,requests,PyMySQL uvicorn main:app --host 0.0.0.0 --port $PORT --app-dir backend

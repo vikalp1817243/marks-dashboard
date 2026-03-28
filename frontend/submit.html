@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Marks | Marks Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+    <div class="bg-blobs"></div>
+    
+    <div class="container" style="display: flex; align-items: center; justify-content: center; min-height: 100vh;">
+        <div class="glass-card animate-fade-in" style="max-width: 500px; width: 100%;">
+            <h2 id="sessionTitle" style="margin-bottom: 0.5rem; text-align: center;">Loading Session...</h2>
+            <p id="sessionInfo" style="text-align: center; margin-bottom: 1.5rem; font-size: 0.9rem;"></p>
+            
+            <div id="error-section" class="d-none text-center" style="background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); padding: 1rem; border-radius: 12px; margin-bottom: 1rem;">
+                <p id="error-msg" style="color: var(--text-primary); margin: 0;"></p>
+            </div>
+
+            <!-- Auth Step -->
+            <div id="auth-section" class="text-center">
+                <p class="mb-2">Verify your @vitbhopal.ac.in identity to submit your marks securely and anonymously.</p>
+                
+                <div id="google-signin-btn" style="display: flex; justify-content: center;"></div>
+                
+                <!-- Mock Login for Dev -->
+                <button class="btn btn-secondary mt-2" id="mockLoginBtn" style="width: 100%; border-style: dashed;">Simulate SSO (Dev Mode)</button>
+            </div>
+
+            <!-- Form Step -->
+            <form id="submitForm" class="d-none">
+                <div class="input-group">
+                    <label for="scoreVal">Your Marks (Anonymous)</label>
+                    <input type="number" id="scoreVal" class="input-control" placeholder="e.g. 85.50" step="0.001" min="0" required style="font-size: 1.2rem; text-align: center;">
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Submit Anonymously</button>
+                <p style="font-size: 0.8rem; text-align: center; margin-top: 1rem; color: var(--text-secondary);">Your identity is irreversibly hashed. The creator cannot see your score.</p>
+            </form>
+
+            <!-- Success Step -->
+            <div id="success-section" class="d-none text-center">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
+                <h3 style="margin-bottom: 1rem;">Marks Submitted!</h3>
+                <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">Your score has been successfully added to the class distribution.</p>
+                
+                <button id="notifyBtn" class="btn btn-secondary" style="width: 100%; margin-bottom: 0.75rem; display: none;">
+                    🔔 Get Notified When Dashboard Is Ready
+                </button>
+                <div id="notify-status" style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem; display: none;"></div>
+                
+                <a id="dashboardBtn" href="#" class="btn btn-primary" style="width: 100%;">View Class Dashboard</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session');
+        
+        let googleToken = null;
+        let sessionMaxMarks = 100;
+        let vapidPublicKey = null;
+        
+        // Dynamically initialize Google Sign-In with client ID from backend
+        async function initGoogleAuth() {
+            try {
+                const res = await fetch('/api/config');
+                const config = await res.json();
+                const clientId = config.google_client_id;
+                vapidPublicKey = config.vapid_public_key;
+                
+                // If real OAuth is configured, hide mock button and render Google button
+                if (clientId !== 'mock-client-id') {
+                    document.getElementById('mockLoginBtn').style.display = 'none';
+                    
+                    // Wait for Google library to be ready
+                    function renderGoogleButton() {
+                        if (window.google && window.google.accounts) {
+                            google.accounts.id.initialize({
+                                client_id: clientId,
+                                callback: handleCredentialResponse
+                            });
+                            google.accounts.id.renderButton(
+                                document.getElementById('google-signin-btn'),
+                                { theme: 'outline', size: 'large', shape: 'rectangular', text: 'signin_with', logo_alignment: 'left' }
+                            );
+                        } else {
+                            // Google lib not loaded yet, retry in 100ms
+                            setTimeout(renderGoogleButton, 100);
+                        }
+                    }
+                    renderGoogleButton();
+                }
+            } catch (err) {
+                console.error('Failed to load config:', err);
+            }
+        }
+        
+        // Wait for Google script to load, then init
+        window.addEventListener('load', initGoogleAuth);
+
+        if (!sessionId) {
+            document.getElementById('error-section').classList.remove('d-none');
+            document.getElementById('error-msg').textContent = "Invalid setup link. Session ID is missing.";
+            document.getElementById('auth-section').classList.add('d-none');
+        } else {
+            // Fetch Session details
+            fetch(`/api/sessions/${sessionId}`)
+                .then(res => {
+                    if (!res.ok) throw new Error("Session expired or invalid");
+                    return res.json();
+                })
+                .then(data => {
+                    document.getElementById('sessionTitle').textContent = data.name;
+                    document.getElementById('sessionInfo').innerHTML = `Max Marks: <strong style="color:var(--text-primary)">${data.max_marks}</strong> &nbsp;|&nbsp; Spots left: <strong style="color:var(--accent-secondary)">${data.spots_remaining} / ${data.class_size}</strong>`;
+                    sessionMaxMarks = data.max_marks;
+                    document.getElementById('scoreVal').max = sessionMaxMarks;
+                })
+                .catch(err => {
+                    document.getElementById('error-section').classList.remove('d-none');
+                    document.getElementById('error-msg').textContent = err.message;
+                    document.getElementById('auth-section').classList.add('d-none');
+                });
+        }
+        
+        // Mock Login functionality
+        document.getElementById('mockLoginBtn').addEventListener('click', () => {
+            const randEmail = `student.24bcy${Math.floor(10000 + Math.random() * 90000)}@vitbhopal.ac.in`;
+            googleToken = `mock_token:${randEmail}`;
+            document.getElementById('auth-section').classList.add('d-none');
+            document.getElementById('submitForm').classList.remove('d-none');
+        });
+
+        // Real Google Login Callback
+        function handleCredentialResponse(response) {
+            googleToken = response.credential;
+            document.getElementById('auth-section').classList.add('d-none');
+            document.getElementById('submitForm').classList.remove('d-none');
+        }
+
+        // Form Submission
+        document.getElementById('submitForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const score = parseFloat(document.getElementById('scoreVal').value);
+            
+            if (score > sessionMaxMarks || score < 0) {
+                alert(`Score must be between 0 and ${sessionMaxMarks}`);
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/sessions/${sessionId}/submit`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${googleToken}`
+                    },
+                    body: JSON.stringify({ score })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('submitForm').classList.add('d-none');
+                    document.getElementById('success-section').classList.remove('d-none');
+                    document.getElementById('error-section').classList.add('d-none');
+                    document.getElementById('dashboardBtn').href = `/dashboard.html?session=${sessionId}`;
+                    
+                    // Show notification button if push is supported
+                    if ('serviceWorker' in navigator && 'PushManager' in window && vapidPublicKey) {
+                        document.getElementById('notifyBtn').style.display = 'block';
+                    }
+                } else {
+                    document.getElementById('error-section').classList.remove('d-none');
+                    document.getElementById('error-msg').textContent = data.detail;
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('error-section').classList.remove('d-none');
+                document.getElementById('error-msg').textContent = 'Connection error';
+            }
+        });
+
+        // Push Notification Subscription
+        document.getElementById('notifyBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('notifyBtn');
+            const statusEl = document.getElementById('notify-status');
+            
+            btn.disabled = true;
+            btn.textContent = '⏳ Setting up...';
+            
+            try {
+                // Register service worker
+                const registration = await navigator.serviceWorker.register('/sw.js');
+                await navigator.serviceWorker.ready;
+                
+                // Request notification permission
+                const permission = await Notification.requestPermission();
+                
+                if (permission !== 'granted') {
+                    btn.textContent = '🔕 Notifications Blocked';
+                    btn.style.opacity = '0.5';
+                    statusEl.textContent = 'You can enable notifications from your browser settings.';
+                    statusEl.style.display = 'block';
+                    return;
+                }
+                
+                // Convert VAPID key to Uint8Array
+                function urlBase64ToUint8Array(base64String) {
+                    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+                    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+                    const rawData = window.atob(base64);
+                    const outputArray = new Uint8Array(rawData.length);
+                    for (let i = 0; i < rawData.length; ++i) {
+                        outputArray[i] = rawData.charCodeAt(i);
+                    }
+                    return outputArray;
+                }
+                
+                // Subscribe to push
+                const subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
+                });
+                
+                const subJson = subscription.toJSON();
+                
+                // Send subscription to backend
+                const res = await fetch('/api/push/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: sessionId,
+                        endpoint: subJson.endpoint,
+                        keys: subJson.keys
+                    })
+                });
+                
+                if (res.ok) {
+                    btn.textContent = '✅ Notifications Enabled!';
+                    btn.style.background = 'rgba(34, 197, 94, 0.15)';
+                    btn.style.borderColor = 'var(--success)';
+                    btn.style.color = 'var(--success)';
+                    statusEl.textContent = "You'll get a notification when the dashboard has enough data.";
+                    statusEl.style.display = 'block';
+                } else {
+                    throw new Error('Failed to save subscription');
+                }
+            } catch (err) {
+                console.error('Push subscription error:', err);
+                btn.textContent = '❌ Setup Failed';
+                statusEl.textContent = err.message || 'Could not enable push notifications.';
+                statusEl.style.display = 'block';
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

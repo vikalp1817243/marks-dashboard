@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Dashboard | Marks Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="bg-blobs"></div>
+    
+    <div class="container pb-2" style="max-width: 1400px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem;">
+            <div>
+                <h1 id="examTitle" style="margin-bottom: 0.5rem; font-size: 2.5rem;">Loading Session...</h1>
+                <p id="examSubtitle" style="margin: 0;">Anonymous Class Performance Analyzer</p>
+            </div>
+            
+            <div class="glass-card" style="padding: 1rem 1.5rem; display: flex; align-items: center; gap: 1rem; border-radius: 12px;">
+                <div style="text-align: right;">
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Submissions</div>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--success);" id="countDisplay">0/0</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="interpretation-panel" class="glass-card mb-2" style="padding: 1.5rem; border-left: 4px solid var(--accent-primary); margin-bottom: 2rem;">
+            <div style="font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 1px;">AI Interpretation</div>
+            <div id="interpretationText" style="font-size: 1.1rem; font-weight: 500;">Waiting for data...</div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="dashboard-grid">
+            <div class="glass-card stat-card">
+                <div class="stat-value" id="statMean">-</div>
+                <div class="stat-label">Average (Mean)</div>
+            </div>
+            <div class="glass-card stat-card">
+                <div class="stat-value" id="statMedian">-</div>
+                <div class="stat-label">Median</div>
+            </div>
+            <div class="glass-card stat-card">
+                <div class="stat-value" id="statMode">-</div>
+                <div class="stat-label">Mode</div>
+            </div>
+            <div class="glass-card stat-card">
+                <div class="stat-value" id="statStdDev" style="color: var(--warning);">-</div>
+                <div class="stat-label">Std Deviation (σ)</div>
+            </div>
+            <div class="glass-card stat-card">
+                <div style="display: flex; justify-content: space-around; align-items: center;">
+                    <div>
+                        <div class="stat-value" id="statMin" style="font-size: 1.8rem; color: var(--danger);">-</div>
+                        <div class="stat-label">Lowest</div>
+                    </div>
+                    <div>
+                        <div class="stat-value" id="statMax" style="font-size: 1.8rem; color: var(--success);">-</div>
+                        <div class="stat-label">Highest</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="charts-grid">
+            <div class="glass-card" style="padding: 1.5rem;">
+                <h3 style="margin-bottom: 1.5rem; font-size: 1.2rem;">Score Distribution</h3>
+                <div style="height: 350px; position: relative;">
+                    <canvas id="histogramChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="glass-card" style="padding: 1.5rem;">
+                <h3 style="margin-bottom: 1.5rem; font-size: 1.2rem;">Quartiles Summary</h3>
+                <div style="display: flex; flex-direction: column; gap: 1.5rem; margin-top: 2rem;">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span style="color: var(--text-secondary);">Q3 (75th Percentile)</span>
+                            <strong id="statQ3">-</strong>
+                        </div>
+                        <div style="height: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; overflow: hidden;">
+                            <div id="barQ3" style="height: 100%; width: 0%; background: var(--accent-secondary); transition: width 0.5s ease;"></div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span style="color: var(--text-secondary);">Q2 (Median)</span>
+                            <strong id="statQ2">-</strong>
+                        </div>
+                        <div style="height: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; overflow: hidden;">
+                            <div id="barQ2" style="height: 100%; width: 0%; background: var(--accent-primary); transition: width 0.5s ease;"></div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span style="color: var(--text-secondary);">Q1 (25th Percentile)</span>
+                            <strong id="statQ1">-</strong>
+                        </div>
+                        <div style="height: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; overflow: hidden;">
+                            <div id="barQ1" style="height: 100%; width: 0%; background: var(--warning); transition: width 0.5s ease;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/dashboard.js"></script>
+</body>
+</html>

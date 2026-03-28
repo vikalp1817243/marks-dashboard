@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Session | Marks Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+    <div class="bg-blobs"></div>
+    
+    <div class="container" style="display: flex; align-items: center; justify-content: center; min-height: 100vh;">
+        <div class="glass-card animate-fade-in" style="max-width: 500px; width: 100%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="margin: 0;">Create Session</h2>
+                <a href="index.html" style="color: var(--text-secondary); text-decoration: none;">✕</a>
+            </div>
+            
+            <!-- Auth Step -->
+            <div id="auth-section" class="text-center">
+                <p class="mb-2">Verify your @vitbhopal.ac.in identity to create an exam session.</p>
+                
+                <div id="google-signin-btn" style="display: flex; justify-content: center;"></div>
+                
+                <!-- Mock Login for Dev -->
+                <button class="btn btn-secondary mt-2" id="mockLoginBtn" style="width: 100%; border-style: dashed;">Simulate SSO (Dev Mode)</button>
+            </div>
+
+            <!-- Form Step -->
+            <form id="createSessionForm" class="d-none">
+                <div class="input-group">
+                    <label for="examName">Exam Name</label>
+                    <input type="text" id="examName" class="input-control" placeholder="e.g. Data Structures Midterm" required maxlength="100">
+                </div>
+                
+                <div class="input-group">
+                    <label for="maxMarks">Maximum Marks</label>
+                    <select id="maxMarks" class="input-control" required>
+                        <option value="50">50 Points</option>
+                        <option value="100">100 Points</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label for="classSize">Class Size: <span id="sizeValue" style="color: var(--accent-secondary); font-weight: bold;">60</span> students</label>
+                    <input type="range" id="classSize" min="10" max="200" value="60" style="width: 100%; margin-top: 0.5rem; accent-color: var(--accent-primary);">
+                    <p style="font-size: 0.8rem; margin-top: 0.5rem;">Expect ~70-90 traffic. Emails will be sent at 90% capacity.</p>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Generate Session Links</button>
+            </form>
+
+            <!-- Success Step -->
+            <div id="success-section" class="d-none text-center">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🎉</div>
+                <h3 style="margin-bottom: 1rem;">Session Created!</h3>
+                <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">These links will self-destruct in 24 hours.</p>
+                
+                <div class="input-group text-left" style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px; border: 1px dashed var(--card-border);">
+                    <label>Share with Classmates (Submit Marks)</label>
+                    <input type="text" id="submitLink" class="input-control" readonly style="margin-bottom: 0.5rem; background: rgba(0,0,0,0.5);">
+                    <button class="btn btn-secondary" onclick="copyText('submitLink')" style="width: 100%; font-size: 0.9rem;">Copy Submission Link</button>
+                </div>
+                
+                <div class="input-group mt-2 mb-2 text-left" style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px; border: 1px dashed var(--card-border);">
+                    <label>Live Class Dashboard</label>
+                    <input type="text" id="dashboardLink" class="input-control" readonly style="margin-bottom: 0.5rem; background: rgba(0,0,0,0.5);">
+                    <a id="dashboardBtn" href="#" class="btn btn-primary" style="width: 100%; font-size: 0.9rem;">Go to Dashboard</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- We'll define simple js behavior inside a script block to avoid too many files for MVP -->
+    <script>
+        let googleToken = null;
+        
+        // Dynamically initialize Google Sign-In with client ID from backend
+        async function initGoogleAuth() {
+            try {
+                const res = await fetch('/api/config');
+                const config = await res.json();
+                const clientId = config.google_client_id;
+                
+                // If real OAuth is configured, hide mock button and render Google button
+                if (clientId !== 'mock-client-id') {
+                    document.getElementById('mockLoginBtn').style.display = 'none';
+                    
+                    // Wait for Google library to be ready
+                    function renderGoogleButton() {
+                        if (window.google && window.google.accounts) {
+                            google.accounts.id.initialize({
+                                client_id: clientId,
+                                callback: handleCredentialResponse
+                            });
+                            google.accounts.id.renderButton(
+                                document.getElementById('google-signin-btn'),
+                                { theme: 'outline', size: 'large', shape: 'rectangular', text: 'signin_with', logo_alignment: 'left' }
+                            );
+                        } else {
+                            // Google lib not loaded yet, retry in 100ms
+                            setTimeout(renderGoogleButton, 100);
+                        }
+                    }
+                    renderGoogleButton();
+                }
+            } catch (err) {
+                console.error('Failed to load config:', err);
+            }
+        }
+        
+        // Wait for Google script to load, then init
+        window.addEventListener('load', initGoogleAuth);
+
+        // Mock Login functionality
+        document.getElementById('mockLoginBtn').addEventListener('click', () => {
+            googleToken = 'mock_token:student.24bcy10000@vitbhopal.ac.in'; // Matches MVP mock token format
+            document.getElementById('auth-section').classList.add('d-none');
+            document.getElementById('createSessionForm').classList.remove('d-none');
+        });
+
+        // Real Google Login Callback
+        function handleCredentialResponse(response) {
+            googleToken = response.credential;
+            document.getElementById('auth-section').classList.add('d-none');
+            document.getElementById('createSessionForm').classList.remove('d-none');
+        }
+
+        // Slider Sync
+        const sizeSlider = document.getElementById('classSize');
+        const sizeVal = document.getElementById('sizeValue');
+        sizeSlider.addEventListener('input', (e) => {
+            sizeVal.textContent = e.target.value;
+        });
+
+        // Copy Text Utility
+        function copyText(elementId) {
+            const input = document.getElementById(elementId);
+            input.select();
+            document.execCommand('copy');
+            alert('Link copied to clipboard!');
+        }
+
+        // Form Submission
+        document.getElementById('createSessionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('examName').value;
+            const maxMarks = parseInt(document.getElementById('maxMarks').value);
+            const classSize = parseInt(document.getElementById('classSize').value);
+            
+            try {
+                const response = await fetch('/api/sessions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${googleToken}`
+                    },
+                    body: JSON.stringify({ name, max_marks: maxMarks, class_size: classSize })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('createSessionForm').classList.add('d-none');
+                    document.getElementById('success-section').classList.remove('d-none');
+                    
+                    document.getElementById('submitLink').value = data.submission_url;
+                    document.getElementById('dashboardLink').value = data.dashboard_url;
+                    document.getElementById('dashboardBtn').href = data.dashboard_url;
+                } else {
+                    alert('Error: ' + data.detail);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Connection error');
+            }
+        });
+    </script>
+</body>
+</html>
