@@ -26,7 +26,7 @@
                 <div id="google-signin-btn" style="display: flex; justify-content: center;"></div>
                 
                 <!-- Mock Login for Dev -->
-                <button class="btn btn-secondary mt-2" id="mockLoginBtn" style="width: 100%; border-style: dashed;">Simulate SSO (Dev Mode)</button>
+                <button class="btn btn-secondary mt-2" id="mockLoginBtn" style="width: 100%; border-style: dashed; display: none;">Simulate SSO (Dev Mode)</button>
             </div>
 
             <!-- Form Step -->
@@ -73,8 +73,10 @@
                 vapidPublicKey = config.vapid_public_key;
                 
                 // If real OAuth is configured, hide mock button and render Google button
-                if (clientId !== 'mock-client-id') {
-                    document.getElementById('mockLoginBtn').style.display = 'none';
+                if (clientId === 'mock-client-id') {
+                    // Dev mode: show the mock login button
+                    document.getElementById('mockLoginBtn').style.display = 'block';
+                } else {
                     
                     // Wait for Google library to be ready
                     function renderGoogleButton() {
@@ -94,6 +96,7 @@
                     }
                     renderGoogleButton();
                 }
+                
             } catch (err) {
                 console.error('Failed to load config:', err);
             }
