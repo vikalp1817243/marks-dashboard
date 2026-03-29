@@ -4,6 +4,10 @@ const sessionId = urlParams.get('session');
 let sessionMaxMarks = 100;
 let sessionClassSize = 60;
 
+// Fix #5: WebSocket reconnection with exponential backoff
+let wsReconnectDelay = 1000; // Start at 1 second
+const WS_MAX_RECONNECT_DELAY = 30000; // Cap at 30 seconds
+
 // Chart.js Setup
 Chart.defaults.color = '#a0a5ba';
 Chart.defaults.font.family = "'Inter', sans-serif";
@@ -80,14 +84,24 @@ function connectWebSocket() {
     const wsUrl = `${wsProtocol}//${window.location.host}/api/sessions/${sessionId}/ws`;
     const ws = new WebSocket(wsUrl);
     
+    ws.onopen = () => {
+        // Fix #5: Reset backoff delay on successful connection
+        wsReconnectDelay = 1000;
+    };
+
     ws.onmessage = (event) => {
         const statsData = JSON.parse(event.data);
         updateUI(statsData);
     };
     
     ws.onclose = () => {
-        console.log("WebSocket disconnected. Reconnecting in 3s...");
-        setTimeout(connectWebSocket, 3000);
+        // Fix #5: Exponential backoff with jitter to prevent thundering herd
+        const jitter = Math.random() * 1000; // 0-1s random jitter
+        const delay = Math.min(wsReconnectDelay + jitter, WS_MAX_RECONNECT_DELAY);
+        console.log(`WebSocket disconnected. Reconnecting in ${Math.round(delay / 1000)}s...`);
+        setTimeout(connectWebSocket, delay);
+        // Double the delay for next attempt (exponential backoff)
+        wsReconnectDelay = Math.min(wsReconnectDelay * 2, WS_MAX_RECONNECT_DELAY);
     };
 }
 

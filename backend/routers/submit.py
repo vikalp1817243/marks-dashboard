@@ -65,9 +65,10 @@ async def submit_score(
     new_stats_model = await recalculate_stats(session_id, db)
     
     # Trigger 90% push notification in background
+    # Fix #4: No longer passes the request-scoped db session — push_service creates its own
     new_count = current_count + 1
     if new_count >= 0.9 * session_obj.class_size:
-        asyncio.create_task(send_push_notifications(session_id, db))
+        asyncio.create_task(send_push_notifications(session_id))
 
     # WebSocket Broadcast
     if new_stats_model:

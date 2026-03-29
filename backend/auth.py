@@ -1,5 +1,6 @@
 import hashlib
 import re
+import asyncio
 from fastapi import HTTPException, status, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from google.oauth2 import id_token
@@ -23,8 +24,22 @@ def encrypt_email(email: str) -> str:
 def decrypt_email(encrypted: str) -> str:
     return base64.b64decode(encrypted.encode('utf-8')).decode('utf-8')
 
-def verify_google_token(credentials: HTTPAuthorizationCredentials = Depends(security)) -> str:
-    """Verify the Google JWT, check domain, and return the email."""
+def _verify_token_sync(token: str) -> dict:
+    """Synchronous Google token verification (runs in a thread pool).
+    
+    The google-auth library internally uses the synchronous `requests` lib
+    to fetch Google's public certificates. Running this in the main async
+    event loop would block ALL other requests. By isolating it in a thread,
+    the event loop remains free to process other I/O-bound work.
+    """
+    return id_token.verify_oauth2_token(token, requests.Request(), GOOGLE_CLIENT_ID)
+
+async def verify_google_token(credentials: HTTPAuthorizationCredentials = Depends(security)) -> str:
+    """Verify the Google JWT, check domain, and return the email.
+    
+    Fix #3: The actual token verification is offloaded to a thread via
+    asyncio.to_thread() so it does not block the async event loop.
+    """
     token = credentials.credentials
     if GOOGLE_CLIENT_ID == "mock-client-id":
         # Dev bypass if actual auth isn't set up yet.
@@ -35,7 +50,8 @@ def verify_google_token(credentials: HTTPAuthorizationCredentials = Depends(secu
             email = "test.24bcy12345@vitbhopal.ac.in"
     else:
         try:
-            idinfo = id_token.verify_oauth2_token(token, requests.Request(), GOOGLE_CLIENT_ID)
+            # Fix #3: Run blocking HTTP call in a separate thread
+            idinfo = await asyncio.to_thread(_verify_token_sync, token)
             
             if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
                 raise ValueError('Wrong issuer.')

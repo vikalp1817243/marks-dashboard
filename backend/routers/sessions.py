@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import func
 
 from database import get_db
-from models import ExamSession
+from models import ExamSession, Submission
 from schemas import SessionCreate, SessionResponse
 from auth import verify_google_token
 from datetime import datetime
@@ -59,9 +60,9 @@ async def get_session(session_id: str, db: AsyncSession = Depends(get_db)):
     if session_obj.expires_at < datetime.utcnow():
         raise HTTPException(status_code=410, detail="Session has expired")
 
-    from models import Submission
-    count_result = await db.execute(select(Submission).where(Submission.session_id == session_id))
-    current_count = len(count_result.scalars().all())
+    # Fix #7: Use SQL COUNT instead of loading all rows into memory
+    count_result = await db.execute(select(func.count(Submission.id)).where(Submission.session_id == session_id))
+    current_count = count_result.scalar()
 
     base_url = BASE_URL
     return SessionResponse(
