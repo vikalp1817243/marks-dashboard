@@ -140,6 +140,123 @@ function updateUI(data) {
         histogramChart.data.datasets[0].data = histData.data;
         histogramChart.update();
     }
+
+    // Render Bell Curve if applicable
+    if (sessionMaxMarks === 100 && data.std_dev > 0 && data.count > 0 && data.raw_scores_json) {
+        document.getElementById('relative-grading-container').classList.remove('d-none');
+        
+        const mu = parseFloat(data.mean);
+        const sigma = parseFloat(data.std_dev);
+        const rawScores = JSON.parse(data.raw_scores_json);
+        
+        // Boundaries
+        const boundS = mu + 1.5 * sigma;
+        const boundA = mu + 0.5 * sigma;
+        const boundB = mu - 0.5 * sigma;
+        const boundC = mu - 1.0 * sigma;
+        const boundD = mu - 1.5 * sigma;
+        const rawBoundE = mu - 2.0 * sigma;
+        
+        const boundE = Math.max(40, rawBoundE); // floor E at 40
+        const boundF = 40; // Hard fail threshold
+        
+        // Update table
+        const tbody = document.getElementById('grade-table-body');
+        tbody.innerHTML = '';
+        
+        const addRow = (grade, range, color) => {
+            tbody.innerHTML += `<tr>
+                <td style="padding: 0.5rem; color: ${color}; font-weight: bold;">${grade}</td>
+                <td style="padding: 0.5rem;">${range}</td>
+            </tr>`;
+        };
+        
+        if (boundS <= 100) {
+            addRow('S (Outstanding)', `&ge; ${boundS.toFixed(2)}`, '#8b5cf6'); // purple
+        }
+        addRow('A (Excellent)', `${boundA.toFixed(2)} - ${boundS > 100 ? '100.00' : (boundS - 0.01).toFixed(2)}`, '#3b82f6'); // blue
+        addRow('B (Very Good)', `${boundB.toFixed(2)} - ${(boundA - 0.01).toFixed(2)}`, '#10b981'); // green
+        addRow('C (Good)', `${boundC.toFixed(2)} - ${(boundB - 0.01).toFixed(2)}`, '#f59e0b'); // yellow
+        addRow('D (Average)', `${boundD.toFixed(2)} - ${(boundC - 0.01).toFixed(2)}`, '#f97316'); // orange
+        if (boundD > 40) {
+            addRow('E (Pass)', `40.00 - ${(boundD - 0.01).toFixed(2)}`, '#ec4899'); // pink
+        }
+        addRow('F (Fail)', `< 40.00`, '#ef4444'); // red
+        
+        // Generator for PDF
+        const pdf = (x) => (1 / (sigma * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - mu) / sigma, 2));
+        
+        // To build datasets for shading, we create fine data points
+        const createDataset = (minX, maxX, grade, color) => {
+            const points = [];
+            for (let x = minX; x <= maxX; x += 0.5) {
+                if (x >= 0 && x <= 100) points.push({ x: x, y: pdf(x) });
+            }
+            if (maxX >= 0 && maxX <= 100) points.push({ x: maxX, y: pdf(maxX) }); // Ensure end boundary
+            return {
+                label: grade,
+                data: points,
+                borderColor: color,
+                backgroundColor: color + '40', // transparent fill
+                fill: 'origin',
+                pointRadius: 0,
+                borderWidth: 2
+            };
+        };
+        
+        const datasets = [];
+        datasets.push(createDataset(0, boundF, 'F', '#ef4444'));
+        if (boundD > 40) {
+            datasets.push(createDataset(boundF, boundD, 'E', '#ec4899'));
+        }
+        datasets.push(createDataset(Math.max(boundD, boundF), boundC, 'D', '#f97316'));
+        datasets.push(createDataset(boundC, boundB, 'C', '#f59e0b'));
+        datasets.push(createDataset(boundB, boundA, 'B', '#10b981'));
+        datasets.push(createDataset(boundA, Math.min(boundS, 100), 'A', '#3b82f6'));
+        if (boundS <= 100) {
+            datasets.push(createDataset(boundS, 100, 'S', '#8b5cf6'));
+        }
+        
+        // Scatter points
+        const scatterData = rawScores.map(score => ({ x: score, y: pdf(score) }));
+        datasets.push({
+            type: 'scatter',
+            label: 'Students',
+            data: scatterData,
+            backgroundColor: '#ffffff',
+            borderColor: '#a0a5ba',
+            borderWidth: 1,
+            pointRadius: 5,
+            pointHoverRadius: 5
+        });
+        
+        if (!window.bellCurveChart) {
+            const bellCtx = document.getElementById('bellCurveChart');
+            window.bellCurveChart = new Chart(bellCtx, {
+                type: 'line',
+                data: { datasets: datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { type: 'linear', min: 0, max: 100, ticks: { color: '#a0a5ba' } },
+                        y: { display: false }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
+                    }
+                }
+            });
+        } else {
+            window.bellCurveChart.data.datasets = datasets;
+            window.bellCurveChart.update();
+        }
+        
+    } else {
+        const c = document.getElementById('relative-grading-container');
+        if (c) c.classList.add('d-none');
+    }
 }
 
 initDashboard();

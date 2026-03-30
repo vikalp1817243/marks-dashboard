@@ -8,6 +8,7 @@ class ExamSession(Base):
     __tablename__ = "exam_sessions"
 
     id = Column(CHAR(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    unique_identifier = Column(String(150), unique=True, index=True, nullable=True)
     name = Column(String(100), nullable=False)
     max_marks = Column(Integer, nullable=False)
     class_size = Column(Integer, nullable=False)
@@ -44,6 +45,7 @@ class CachedStats(Base):
     count = Column(Integer, default=0)
     interpretation = Column(Text, nullable=True)
     histogram_json = Column(Text, nullable=True)
+    raw_scores_json = Column(Text, nullable=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 class PushSubscription(Base):

@@ -84,6 +84,7 @@ async def recalculate_stats(session_id: str, db: AsyncSession):
     stats_obj.count = count
     stats_obj.interpretation = interpretation
     stats_obj.histogram_json = json.dumps(histogram_data)
+    stats_obj.raw_scores_json = json.dumps([float(s) for s in scores_array])
 
     await db.commit()
     await db.refresh(stats_obj)
@@ -100,5 +101,6 @@ async def recalculate_stats(session_id: str, db: AsyncSession):
         "q3": stats_obj.q3,
         "count": stats_obj.count,
         "interpretation": stats_obj.interpretation,
-        "histogram_json": stats_obj.histogram_json
+        "histogram_json": stats_obj.histogram_json,
+        "raw_scores_json": stats_obj.raw_scores_json
     }

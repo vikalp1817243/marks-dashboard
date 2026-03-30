@@ -27,6 +27,7 @@ async def get_dashboard_stats(session_id: str, db: AsyncSession = Depends(get_db
             mean=None, median=None, mode=None, std_dev=None,
             min=None, max=None, q1=None, q3=None,
             count=0, interpretation=None, histogram_json=None,
+            raw_scores_json=None,
             updated_at=datetime.utcnow()
         )
         
@@ -43,6 +44,7 @@ async def get_dashboard_stats(session_id: str, db: AsyncSession = Depends(get_db
         count=stats.count,
         interpretation=stats.interpretation,
         histogram_json=stats.histogram_json,
+        raw_scores_json=stats.raw_scores_json,
         updated_at=stats.updated_at
     )
 

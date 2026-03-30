@@ -17,3 +17,10 @@ __pycache__/
 # OS
 .DS_Store
 Thumbs.db
+
+# guide
+oauth_setup_guide.md
+Google_OAuth_Deployment_Guide.md
+Railway_Deployment_Guide.md
+SETUP_AND_DEVELOPMENT.md
+TiDB_Deployment_Guide.md

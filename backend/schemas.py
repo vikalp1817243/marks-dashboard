@@ -3,8 +3,11 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime
 
 class SessionCreate(BaseModel):
-    name: str = Field(..., max_length=100)
-    max_marks: int = Field(..., description="Either 50 or 100")
+    exam_type: str = Field(..., description="E.g., Mid-Term (50), Term-End (100), Overall (100)")
+    class_id: Optional[str] = Field(None, description="Optional class ID")
+    faculty_name: str = Field(..., description="Faculty name")
+    slot: str = Field(..., description="Slot")
+    course_code: str = Field(..., description="Course code")
     class_size: int = Field(..., ge=10, le=200)
 
 class SessionResponse(BaseModel):
@@ -34,4 +37,5 @@ class CachedStatsResponse(BaseModel):
     count: int
     interpretation: Optional[str]
     histogram_json: Optional[str]
+    raw_scores_json: Optional[str]
     updated_at: datetime

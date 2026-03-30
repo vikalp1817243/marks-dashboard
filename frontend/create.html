@@ -30,16 +30,33 @@
             <!-- Form Step -->
             <form id="createSessionForm" class="d-none">
                 <div class="input-group">
-                    <label for="examName">Exam Name</label>
-                    <input type="text" id="examName" class="input-control" placeholder="e.g. Data Structures Midterm" required maxlength="100">
-                </div>
-                
-                <div class="input-group">
-                    <label for="maxMarks">Maximum Marks</label>
-                    <select id="maxMarks" class="input-control" required>
-                        <option value="50">50 Points</option>
-                        <option value="100">100 Points</option>
+                    <label for="examType">Exam Type</label>
+                    <select id="examType" class="input-control" required>
+                        <option value="Mid-Term (50 marks)">Mid-Term (50 marks)</option>
+                        <option value="Term-End (100 marks)">Term-End (100 marks)</option>
+                        <option value="Overall Marks (weightage 100 marks)">Overall Marks (weightage 100 marks)</option>
                     </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="classId">Class ID <span style="font-size: 0.8rem; color: var(--text-secondary);">(Optional)</span></label>
+                    <input type="text" id="classId" class="input-control" placeholder="e.g. 1VL0091">
+                </div>
+
+                <div class="input-group">
+                    <label for="facultyName">Faculty Name</label>
+                    <input type="text" id="facultyName" class="input-control" placeholder="e.g. Dr. Jane Smith" required>
+                </div>
+
+                <div class="input-group" style="display: flex; gap: 1rem;">
+                    <div style="flex: 1;">
+                        <label for="slot">Slot</label>
+                        <input type="text" id="slot" class="input-control" placeholder="e.g. A11+A12" required>
+                    </div>
+                    <div style="flex: 1;">
+                        <label for="courseCode">Course Code</label>
+                        <input type="text" id="courseCode" class="input-control" placeholder="e.g. CSE1001" required>
+                    </div>
                 </div>
                 
                 <div class="input-group">
@@ -149,8 +166,11 @@
         document.getElementById('createSessionForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const name = document.getElementById('examName').value;
-            const maxMarks = parseInt(document.getElementById('maxMarks').value);
+            const examType = document.getElementById('examType').value;
+            const classId = document.getElementById('classId').value;
+            const facultyName = document.getElementById('facultyName').value;
+            const slot = document.getElementById('slot').value;
+            const courseCode = document.getElementById('courseCode').value;
             const classSize = parseInt(document.getElementById('classSize').value);
             
             try {
@@ -160,7 +180,14 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${googleToken}`
                     },
-                    body: JSON.stringify({ name, max_marks: maxMarks, class_size: classSize })
+                    body: JSON.stringify({
+                        exam_type: examType,
+                        class_id: classId,
+                        faculty_name: facultyName,
+                        slot: slot,
+                        course_code: courseCode,
+                        class_size: classSize
+                    })
                 });
                 
                 const data = await response.json();
