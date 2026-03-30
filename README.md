@@ -6,13 +6,17 @@ An anonymous, peer-driven web application for analyzing class performance at **V
 
 ## Features
 
-- **100% Anonymous** — Marks and identities are stored in separate, unlinked database tables
-- **Real-time Dashboard** — WebSocket-powered live updates as marks come in
-- **Full Statistical Analysis** — Mean, Median, Mode, Standard Deviation, Quartiles, Histograms
-- **AI Interpretation** — Automatic text analysis of class performance
-- **24h Auto-Delete** — All session data is purged automatically
-- **Push Notifications** — Browser push alerts when 90% capacity is reached
-- **Google SSO** — Only `@vitbhopal.ac.in` accounts can participate
+- **Relative Grading (Bell Curve System)** - Dynamically generates a standard normal distribution curve for 100-mark exams based on the VIT grading algorithm, charting clear thresholds for letter grades.
+- **Interactive Scatter Plots** - Plots each student's exact score as a raw data point directly on the probability density curve to visualize their exact standing in the class.
+- **Session Deduplication** - Generates unique session hashes using Class ID, Faculty Name, Slot, and Course Code to prevent duplicate databases for the same class module.
+- **Strict Data Validation** - Rigid numerical validation bounds on the client and server to prevent database corruption from malformed entries.
+- **100% Anonymous** - Marks and identities are stored in separate, unlinked database tables.
+- **Real-time Dashboard** - WebSocket-powered live updates as marks come in.
+- **Full Statistical Analysis** - Mean, Median, Mode, Standard Deviation, Quartiles, Histograms.
+- **AI Interpretation** - Automatic text analysis of class performance.
+- **24h Auto-Delete** - All session data is purged automatically.
+- **Push Notifications** - Browser push alerts when 90% capacity is reached.
+- **Google SSO** - Only `@vitbhopal.ac.in` accounts can participate.
 
 ## Tech Stack
 
@@ -76,20 +80,6 @@ Visit: [http://localhost:8000](http://localhost:8000)
 4. Credentials → Create OAuth 2.0 Client ID
 5. Set authorized origins to `http://localhost:8000`
 6. Copy Client ID to `.env`
-
-## Architecture
-
-```
-Student A creates session → Shares link → Students B,C,D submit marks
-                                            ↓
-                                    [Google SSO Verification]
-                                            ↓
-                                    [SHA-256 Hash Email] ──→ Submission Table (hash only)
-                                            ↓
-                                    [Score Only] ──→ ExamScore Table (no identity)
-                                            ↓
-                                    [NumPy Stats Engine] → CachedStats → WebSocket → Dashboard
-```
 
 ## License
 
