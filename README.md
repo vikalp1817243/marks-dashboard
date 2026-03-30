@@ -1,4 +1,4 @@
-# 📊 Marks Dashboard
+# Marks Dashboard
 
 An anonymous, peer-driven web application for analyzing class performance at **VIT Bhopal**. Any student can create an exam session, share a link with classmates, and everyone submits their marks anonymously. A real-time statistical dashboard is generated instantly.
 
@@ -6,13 +6,13 @@ An anonymous, peer-driven web application for analyzing class performance at **V
 
 ## Features
 
-- 🔒 **100% Anonymous** — Marks and identities are stored in separate, unlinked database tables
-- 📈 **Real-time Dashboard** — WebSocket-powered live updates as marks come in
-- 📊 **Full Statistical Analysis** — Mean, Median, Mode, Standard Deviation, Quartiles, Histograms
-- 🤖 **AI Interpretation** — Automatic text analysis of class performance
-- ⏳ **24h Auto-Delete** — All session data is purged automatically
-- 🔔 **Push Notifications** — Browser push alerts when 90% capacity is reached
-- 🔐 **Google SSO** — Only `@vitbhopal.ac.in` accounts can participate
+- **100% Anonymous** — Marks and identities are stored in separate, unlinked database tables
+- **Real-time Dashboard** — WebSocket-powered live updates as marks come in
+- **Full Statistical Analysis** — Mean, Median, Mode, Standard Deviation, Quartiles, Histograms
+- **AI Interpretation** — Automatic text analysis of class performance
+- **24h Auto-Delete** — All session data is purged automatically
+- **Push Notifications** — Browser push alerts when 90% capacity is reached
+- **Google SSO** — Only `@vitbhopal.ac.in` accounts can participate
 
 ## Tech Stack
 
