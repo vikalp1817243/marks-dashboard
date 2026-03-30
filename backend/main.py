@@ -17,10 +17,20 @@ FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 async def lifespan(app: FastAPI):
     # Startup
     await init_db()
-    scheduler.start()
+    
+    # With --workers 4, each worker runs this lifespan independently.
+    # We only want ONE worker to run the scheduler (cleanup + keep-alive).
+    # Use a process-level flag to ensure only the first worker starts it.
+    _scheduler_started = False
+    if not scheduler.running:
+        scheduler.start()
+        _scheduler_started = True
+    
     yield
+    
     # Shutdown
-    scheduler.shutdown()
+    if _scheduler_started and scheduler.running:
+        scheduler.shutdown()
 
 app = FastAPI(title="Marks Dashboard API", lifespan=lifespan)
 
