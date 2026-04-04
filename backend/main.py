@@ -1,10 +1,11 @@
 import os
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 from contextlib import asynccontextmanager
 
 from database import init_db
@@ -33,6 +34,19 @@ async def lifespan(app: FastAPI):
         scheduler.shutdown()
 
 app = FastAPI(title="Marks Dashboard API", lifespan=lifespan)
+
+# Middleware to prevent aggressive caching of static assets
+class NoCacheStaticMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        path = request.url.path
+        if path.endswith(('.js', '.css', '.html')) or path == '/' or path == '/sw.js':
+            response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+            response.headers['Pragma'] = 'no-cache'
+            response.headers['Expires'] = '0'
+        return response
+
+app.add_middleware(NoCacheStaticMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
