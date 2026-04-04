@@ -6,29 +6,89 @@
     <title>Create Session | Marks Dashboard</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        .path-selector {
+            display: flex;
+            gap: 0.75rem;
+            margin: 1.5rem 0;
+        }
+        .path-btn {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid var(--card-border);
+            border-radius: 12px;
+            background: rgba(0,0,0,0.15);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            color: var(--text-secondary);
+        }
+        .path-btn:hover {
+            border-color: var(--accent-primary);
+            background: rgba(109, 40, 217, 0.08);
+        }
+        .path-btn.active {
+            border-color: var(--accent-primary);
+            background: rgba(109, 40, 217, 0.15);
+            color: var(--text-primary);
+        }
+        .path-btn .path-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .path-btn .path-title { font-weight: 600; font-size: 0.9rem; }
+        .path-btn .path-desc { font-size: 0.75rem; margin-top: 0.25rem; opacity: 0.7; }
+
+        .path-section { display: none; animation: fadeIn 0.3s ease; }
+        .path-section.visible { display: block; }
+
+        .warning-box {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            font-size: 0.8rem;
+            color: #fbbf24;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .error-inline {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger);
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            font-size: 0.85rem;
+            color: #fca5a5;
+            margin-top: 0.75rem;
+            display: none;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 </head>
 <body>
     <div class="bg-blobs"></div>
     
-    <div class="container" style="display: flex; align-items: center; justify-content: center; min-height: 100vh;">
-        <div class="glass-card animate-fade-in" style="max-width: 500px; width: 100%;">
+    <div class="container" style="display: flex; align-items: flex-start; justify-content: center; min-height: 100vh; gap: 2rem; padding: 2rem 0; flex-wrap: wrap;">
+        
+        <!-- Main Card -->
+        <div class="glass-card animate-fade-in" style="max-width: 520px; width: 100%;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                 <h2 style="margin: 0;">Create Session</h2>
                 <a href="index.html" style="color: var(--text-secondary); text-decoration: none;">✕</a>
             </div>
             
-            <!-- Auth Step -->
+            <!-- AUTH STEP -->
             <div id="auth-section" class="text-center">
                 <p class="mb-2">Verify your @vitbhopal.ac.in identity to create an exam session.</p>
-                
                 <div id="google-signin-btn" style="display: flex; justify-content: center;"></div>
-                
-                <!-- Mock Login for Dev -->
                 <button class="btn btn-secondary mt-2" id="mockLoginBtn" style="width: 100%; border-style: dashed; display: none;">Simulate SSO (Dev Mode)</button>
             </div>
 
-            <!-- Form Step -->
-            <form id="createSessionForm" class="d-none">
+            <!-- FORM STEP -->
+            <div id="form-section" class="d-none">
+                <!-- Common fields -->
                 <div class="input-group">
                     <label for="examType">Exam Type</label>
                     <select id="examType" class="input-control" required>
@@ -40,7 +100,7 @@
 
                 <div class="input-group">
                     <label for="classId">Class ID <span style="font-size: 0.8rem; color: var(--text-secondary);">(Optional)</span></label>
-                    <input type="text" id="classId" class="input-control" placeholder="e.g. 1VL0091">
+                    <input type="text" id="classId" class="input-control" placeholder="e.g. BL1009">
                 </div>
 
                 <div class="input-group">
@@ -58,103 +118,179 @@
                         <input type="text" id="courseCode" class="input-control" placeholder="e.g. CSE1001" required>
                     </div>
                 </div>
-                
-                <div class="input-group">
-                    <label for="classSize">Class Size: <span id="sizeValue" style="color: var(--accent-secondary); font-weight: bold;">60</span> students</label>
-                    <input type="range" id="classSize" min="10" max="200" value="60" style="width: 100%; margin-top: 0.5rem; accent-color: var(--accent-primary);">
-                    <p style="font-size: 0.8rem; margin-top: 0.5rem;">Expect ~70-90 traffic. Emails will be sent at 90% capacity.</p>
-                </div>
-                
-                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Generate Session Links</button>
-            </form>
 
-            <!-- Success Step -->
-            <div id="success-section" class="d-none text-center">
+                <!-- Path Selector -->
+                <div style="border-top: 1px dashed var(--card-border); padding-top: 1rem; margin-top: 0.5rem;">
+                    <label style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem; display: block;">How do you want to enter marks?</label>
+                    <div class="path-selector">
+                        <div class="path-btn" id="pathA-btn" onclick="selectPath('A')">
+                            <div class="path-icon">📄</div>
+                            <div class="path-title">Upload Spreadsheet</div>
+                            <div class="path-desc">Bulk import from file</div>
+                        </div>
+                        <div class="path-btn" id="pathB-btn" onclick="selectPath('B')">
+                            <div class="path-icon">✍️</div>
+                            <div class="path-title">Manual Entry</div>
+                            <div class="path-desc">Students submit individually</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PATH A: Upload Spreadsheet -->
+                <div id="path-a-section" class="path-section">
+                    <div class="warning-box">
+                        ⚠️ Your spreadsheet <strong>must</strong> have a column header named <strong>Marks</strong>, <strong>Score</strong>, <strong>Total</strong>, or <strong>Obtained</strong> in the first row. The class size will be determined automatically from the file.
+                    </div>
+                    <div class="input-group">
+                        <label for="bulkUpload">Select Spreadsheet</label>
+                        <input type="file" id="bulkUpload" class="input-control" accept=".csv, .xlsx, .xls, .ods">
+                        <p style="font-size: 0.75rem; margin-top: 0.5rem; color: var(--text-secondary);">Supports .csv, .xlsx, and .ods (LibreOffice) files.</p>
+                    </div>
+                    <div id="upload-error" class="error-inline"></div>
+                    <button type="button" id="uploadBtn" class="btn btn-primary" onclick="handlePathA()" style="width: 100%; margin-top: 0.75rem;">Upload & Create Dashboard</button>
+                </div>
+
+                <!-- PATH B: Manual Entry -->
+                <div id="path-b-section" class="path-section">
+                    <div class="input-group">
+                        <label for="classSize">Class Size: <span id="sizeValue" style="color: var(--accent-secondary); font-weight: bold;">60</span> students</label>
+                        <input type="range" id="classSize" min="10" max="200" value="60" style="width: 100%; margin-top: 0.5rem; accent-color: var(--accent-primary);">
+                        <p style="font-size: 0.8rem; margin-top: 0.5rem; color: var(--text-secondary);">Students will use the shared link to enter their marks individually.</p>
+                    </div>
+                    <button type="button" id="generateBtn" class="btn btn-primary" onclick="handlePathB()" style="width: 100%; margin-top: 0.75rem;">Generate Session Links</button>
+                </div>
+            </div>
+
+            <!-- SUCCESS: Upload Path (dashboard only) -->
+            <div id="success-upload" class="d-none text-center">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">📊</div>
+                <h3 style="margin-bottom: 0.5rem;">Dashboard Ready!</h3>
+                <p id="upload-summary" style="margin-bottom: 1.5rem; color: var(--text-secondary);"></p>
+                <div class="input-group text-left" style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px; border: 1px solid var(--accent-primary);">
+                    <label>Live Class Dashboard</label>
+                    <input type="text" id="uploadDashLink" class="input-control" readonly style="margin-bottom: 0.5rem; background: rgba(0,0,0,0.5);">
+                    <a id="uploadDashBtn" href="#" class="btn btn-primary" style="width: 100%; font-size: 0.9rem;">Go to Dashboard</a>
+                </div>
+            </div>
+
+            <!-- SUCCESS: Manual Path (both links) -->
+            <div id="success-manual" class="d-none text-center">
                 <div style="font-size: 3rem; margin-bottom: 1rem;">🎉</div>
                 <h3 style="margin-bottom: 1rem;">Session Created!</h3>
                 <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">These links will self-destruct in 24 hours.</p>
-                
                 <div class="input-group text-left" style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px; border: 1px dashed var(--card-border);">
                     <label>Share with Classmates (Submit Marks)</label>
                     <input type="text" id="submitLink" class="input-control" readonly style="margin-bottom: 0.5rem; background: rgba(0,0,0,0.5);">
                     <button class="btn btn-secondary" onclick="copyText('submitLink')" style="width: 100%; font-size: 0.9rem;">Copy Submission Link</button>
                 </div>
-                
-                <div class="input-group mt-2 mb-2 text-left" style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px; border: 1px dashed var(--card-border);">
+                <div class="input-group mt-2 mb-2 text-left" style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px; border: 1px solid var(--accent-primary);">
                     <label>Live Class Dashboard</label>
-                    <input type="text" id="dashboardLink" class="input-control" readonly style="margin-bottom: 0.5rem; background: rgba(0,0,0,0.5);">
-                    <a id="dashboardBtn" href="#" class="btn btn-primary" style="width: 100%; font-size: 0.9rem;">Go to Dashboard</a>
+                    <input type="text" id="manualDashLink" class="input-control" readonly style="margin-bottom: 0.5rem; background: rgba(0,0,0,0.5);">
+                    <a id="manualDashBtn" href="#" class="btn btn-primary" style="width: 100%; font-size: 0.9rem;">Go to Dashboard</a>
                 </div>
+            </div>
+        </div>
+
+        <!-- Active Sessions Panel (Right) -->
+        <div id="sessions-history" class="glass-card animate-fade-in d-none" style="max-width: 350px; width: 100%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="margin: 0; font-size: 1.1rem;">Active Sessions</h3>
+                <span id="active-count-badge" style="background: var(--accent-primary); color: white; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 20px;">0</span>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0; margin-bottom: 1rem;">Latest 10 sessions currently running.</p>
+            <div id="active-sessions-list" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <p style="color: var(--text-secondary); font-size: 0.85rem;">Loading...</p>
             </div>
         </div>
     </div>
 
-    <!-- We'll define simple js behavior inside a script block to avoid too many files for MVP -->
     <script>
         let googleToken = null;
-        
-        // Dynamically initialize Google Sign-In with client ID from backend
+        let currentPath = null;
+
+        // ── Auth ──
         async function initGoogleAuth() {
             try {
                 const res = await fetch('/api/config');
                 const config = await res.json();
                 const clientId = config.google_client_id;
-                
-                // If real OAuth is configured, hide mock button and render Google button
+
                 if (clientId === 'mock-client-id') {
-                    // Dev mode: show the mock login button
                     document.getElementById('mockLoginBtn').style.display = 'block';
                 } else {
-                    
-                    // Wait for Google library to be ready
                     function renderGoogleButton() {
                         if (window.google && window.google.accounts) {
-                            google.accounts.id.initialize({
-                                client_id: clientId,
-                                callback: handleCredentialResponse
-                            });
+                            google.accounts.id.initialize({ client_id: clientId, callback: handleCredentialResponse });
                             google.accounts.id.renderButton(
                                 document.getElementById('google-signin-btn'),
                                 { theme: 'outline', size: 'large', shape: 'rectangular', text: 'signin_with', logo_alignment: 'left' }
                             );
-                        } else {
-                            // Google lib not loaded yet, retry in 100ms
-                            setTimeout(renderGoogleButton, 100);
-                        }
+                        } else { setTimeout(renderGoogleButton, 100); }
                     }
                     renderGoogleButton();
                 }
-                
-            } catch (err) {
-                console.error('Failed to load config:', err);
-            }
+            } catch (err) { console.error('Failed to load config:', err); }
         }
-        
-        // Wait for Google script to load, then init
         window.addEventListener('load', initGoogleAuth);
 
-        // Mock Login functionality
         document.getElementById('mockLoginBtn').addEventListener('click', () => {
-            googleToken = 'mock_token:student.24bcy10000@vitbhopal.ac.in'; // Matches MVP mock token format
-            document.getElementById('auth-section').classList.add('d-none');
-            document.getElementById('createSessionForm').classList.remove('d-none');
+            googleToken = 'mock_token:student.24bcy10000@vitbhopal.ac.in';
+            onLoginSuccess();
         });
 
-        // Real Google Login Callback
         function handleCredentialResponse(response) {
             googleToken = response.credential;
-            document.getElementById('auth-section').classList.add('d-none');
-            document.getElementById('createSessionForm').classList.remove('d-none');
+            onLoginSuccess();
         }
 
-        // Slider Sync
+        function onLoginSuccess() {
+            document.getElementById('auth-section').classList.add('d-none');
+            document.getElementById('form-section').classList.remove('d-none');
+            showHistory();
+        }
+
+        // ── Path Switching ──
+        function selectPath(path) {
+            currentPath = path;
+            document.getElementById('pathA-btn').classList.toggle('active', path === 'A');
+            document.getElementById('pathB-btn').classList.toggle('active', path === 'B');
+            document.getElementById('path-a-section').classList.toggle('visible', path === 'A');
+            document.getElementById('path-b-section').classList.toggle('visible', path === 'B');
+            // Clear any previous errors
+            document.getElementById('upload-error').style.display = 'none';
+        }
+
+        // ── Active Sessions List ──
+        function showHistory() {
+            const panel = document.getElementById('sessions-history');
+            panel.classList.remove('d-none');
+            fetch('/api/sessions')
+                .then(res => { if (!res.ok) throw new Error(`Server ${res.status}`); return res.json(); })
+                .then(data => {
+                    document.getElementById('active-count-badge').textContent = data.active.length;
+                    const container = document.getElementById('active-sessions-list');
+                    const latest = data.active.slice(0, 10);
+                    if (latest.length === 0) {
+                        container.innerHTML = '<p style="color: var(--text-secondary); font-size: 0.85rem;">No active sessions.</p>';
+                        return;
+                    }
+                    container.innerHTML = latest.map((s, i) => `
+                        <div style="display: flex; align-items: center; gap: 0.6rem; padding: 0.6rem 0.8rem; background: rgba(0,0,0,0.15); border-radius: 8px; border-left: 3px solid var(--accent-primary);">
+                            <span style="color: var(--text-secondary); font-size: 0.75rem; font-weight: 600; min-width: 1.2rem;">${i + 1}.</span>
+                            <span style="font-size: 0.85rem; font-weight: 500; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${s.name}</span>
+                        </div>
+                    `).join('');
+                }).catch(err => {
+                    console.error("Could not fetch sessions", err);
+                    document.getElementById('active-sessions-list').innerHTML = '<p style="color: var(--danger); font-size: 0.85rem;">Failed to load sessions.</p>';
+                });
+        }
+
+        // ── Slider Sync ──
         const sizeSlider = document.getElementById('classSize');
         const sizeVal = document.getElementById('sizeValue');
-        sizeSlider.addEventListener('input', (e) => {
-            sizeVal.textContent = e.target.value;
-        });
+        sizeSlider.addEventListener('input', (e) => { sizeVal.textContent = e.target.value; });
 
-        // Copy Text Utility
         function copyText(elementId) {
             const input = document.getElementById(elementId);
             input.select();
@@ -162,51 +298,128 @@
             alert('Link copied to clipboard!');
         }
 
-        // Form Submission
-        document.getElementById('createSessionForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const examType = document.getElementById('examType').value;
-            const classId = document.getElementById('classId').value;
-            const facultyName = document.getElementById('facultyName').value;
-            const slot = document.getElementById('slot').value;
-            const courseCode = document.getElementById('courseCode').value;
-            const classSize = parseInt(document.getElementById('classSize').value);
-            
+        // Get common form fields
+        function getCommonFields() {
+            return {
+                exam_type: document.getElementById('examType').value,
+                class_id: document.getElementById('classId').value,
+                faculty_name: document.getElementById('facultyName').value,
+                slot: document.getElementById('slot').value,
+                course_code: document.getElementById('courseCode').value
+            };
+        }
+
+        // Validate common fields
+        function validateCommonFields() {
+            const fields = getCommonFields();
+            if (!fields.faculty_name.trim()) { alert('Faculty Name is required.'); return false; }
+            if (!fields.slot.trim()) { alert('Slot is required.'); return false; }
+            if (!fields.course_code.trim()) { alert('Course Code is required.'); return false; }
+            return true;
+        }
+
+        // ── PATH A: Upload Spreadsheet ──
+        async function handlePathA() {
+            if (!validateCommonFields()) return;
+
+            const fileInput = document.getElementById('bulkUpload');
+            const file = fileInput.files[0];
+            const errorDiv = document.getElementById('upload-error');
+            errorDiv.style.display = 'none';
+
+            if (!file) {
+                errorDiv.textContent = 'Please select a spreadsheet file first.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            const btn = document.getElementById('uploadBtn');
+            btn.textContent = 'Parsing & Creating...';
+            btn.disabled = true;
+
             try {
+                const fields = getCommonFields();
+                const formData = new FormData();
+                formData.append('exam_type', fields.exam_type);
+                formData.append('class_id', fields.class_id);
+                formData.append('faculty_name', fields.faculty_name);
+                formData.append('slot', fields.slot);
+                formData.append('course_code', fields.course_code);
+                formData.append('file', file);
+
+                const res = await fetch('/api/sessions/bulk-create', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${googleToken}` },
+                    body: formData
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    // Show upload success — dashboard only
+                    document.getElementById('form-section').classList.add('d-none');
+                    document.getElementById('sessions-history').classList.add('d-none');
+                    document.getElementById('success-upload').classList.remove('d-none');
+
+                    document.getElementById('upload-summary').textContent =
+                        `Imported ${data.scores_imported} scores from "${file.name}". Class size: ${data.class_size} students.`;
+                    document.getElementById('uploadDashLink').value = data.dashboard_url;
+                    document.getElementById('uploadDashBtn').href = data.dashboard_url;
+                } else {
+                    // Show inline error — NO session was created
+                    errorDiv.textContent = data.detail || 'Failed to process file.';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (err) {
+                console.error(err);
+                errorDiv.textContent = 'Connection error. Please try again.';
+                errorDiv.style.display = 'block';
+            } finally {
+                btn.textContent = 'Upload & Create Dashboard';
+                btn.disabled = false;
+            }
+        }
+
+        // ── PATH B: Manual Entry ──
+        async function handlePathB() {
+            if (!validateCommonFields()) return;
+
+            const btn = document.getElementById('generateBtn');
+            btn.textContent = 'Allocating Server Slots...';
+            btn.disabled = true;
+
+            try {
+                const fields = getCommonFields();
                 const response = await fetch('/api/sessions', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${googleToken}`
-                    },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${googleToken}` },
                     body: JSON.stringify({
-                        exam_type: examType,
-                        class_id: classId,
-                        faculty_name: facultyName,
-                        slot: slot,
-                        course_code: courseCode,
-                        class_size: classSize
+                        ...fields,
+                        class_size: parseInt(document.getElementById('classSize').value)
                     })
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (response.ok) {
-                    document.getElementById('createSessionForm').classList.add('d-none');
-                    document.getElementById('success-section').classList.remove('d-none');
-                    
+                    document.getElementById('form-section').classList.add('d-none');
+                    document.getElementById('sessions-history').classList.add('d-none');
+                    document.getElementById('success-manual').classList.remove('d-none');
+
                     document.getElementById('submitLink').value = data.submission_url;
-                    document.getElementById('dashboardLink').value = data.dashboard_url;
-                    document.getElementById('dashboardBtn').href = data.dashboard_url;
+                    document.getElementById('manualDashLink').value = data.dashboard_url;
+                    document.getElementById('manualDashBtn').href = data.dashboard_url;
                 } else {
                     alert('Error: ' + data.detail);
                 }
             } catch (err) {
                 console.error(err);
                 alert('Connection error');
+            } finally {
+                btn.textContent = 'Generate Session Links';
+                btn.disabled = false;
             }
-        });
+        }
     </script>
 </body>
 </html>

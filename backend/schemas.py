@@ -8,7 +8,7 @@ class SessionCreate(BaseModel):
     faculty_name: str = Field(..., description="Faculty name")
     slot: str = Field(..., description="Slot")
     course_code: str = Field(..., description="Course code")
-    class_size: int = Field(..., ge=10, le=200)
+    class_size: Optional[int] = Field(None, ge=10, le=200)
 
 class SessionResponse(BaseModel):
     id: str

@@ -14,3 +14,6 @@ pytest
 httpx
 requests
 PyMySQL
+python-multipart
+openpyxl
+odfpy

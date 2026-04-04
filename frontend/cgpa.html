@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CGPA Calculator | Marks Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .row-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            align-items: center;
+        }
+        @media (max-width: 600px) {
+            .row-grid {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+                padding-bottom: 1rem;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+            }
+            .del-btn {
+                width: 100%;
+            }
+        }
+        .del-btn {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            border-radius: 8px;
+            padding: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .del-btn:hover {
+            background: rgba(239, 68, 68, 0.4);
+            color: #fff;
+        }
+        #resultContainer {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            border-radius: 12px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            text-align: center;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        .quote-text {
+            font-style: italic;
+            color: var(--text-secondary);
+            margin-top: 1rem;
+            font-size: 1.1rem;
+        }
+        .result-number {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0.5rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-blobs"></div>
+    
+    <div class="container" style="display: flex; align-items: center; justify-content: center; min-height: 100vh; padding-top: 2rem; padding-bottom: 2rem;">
+        <div class="glass-card animate-fade-in" style="max-width: 800px; width: 100%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <div>
+                    <h2 style="margin: 0; font-size: 2rem;">CGPA Calculator</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.2rem;">Calculate strictly on your device. No data is saved.</p>
+                </div>
+                <a href="index.html" style="color: var(--text-secondary); text-decoration: none; font-size: 1.5rem;" title="Go Home">✕</a>
+            </div>
+
+            <div style="background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 12px; border: 1px dashed var(--card-border); margin-bottom: 2rem;">
+                <div id="courseRows">
+                    <!-- Rows will be injected here via JS -->
+                </div>
+                
+                <button class="btn btn-secondary" id="addCourseBtn" style="width: 100%; border-style: dashed; margin-top: 1rem;">
+                    + Add Course
+                </button>
+            </div>
+
+            <button class="btn btn-primary" id="calculateBtn" style="width: 100%; font-size: 1.1rem; padding: 1rem;">
+                🧮 Calculate SGPA/CGPA
+            </button>
+
+            <div id="resultContainer">
+                <div style="text-transform: uppercase; letter-spacing: 2px; font-size: 0.9rem; color: var(--text-primary);">Your Calculated Score</div>
+                <div class="result-number" id="resultValue">0.00</div>
+                <div class="quote-text" id="resultQuote">"Motivation goes here"</div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const gradePoints = {
+            'S': 10,
+            'A': 9,
+            'B': 8,
+            'C': 7,
+            'D': 6,
+            'E': 5,
+            'F': 0
+        };
+
+        const getMotivationalQuote = (cgpa) => {
+            if (cgpa === 10) return "Absolute perfection! You're literally unbreakable! 🌟✨";
+            if (cgpa >= 9) return "Outstanding work! You're soaring high above the clouds! 🚀🔥";
+            if (cgpa >= 8) return "Excellent job! Your hard work is truly paying off! 💎👏";
+            if (cgpa >= 7) return "Good effort! You're firmly on the path to success! 🌱👍";
+            if (cgpa >= 6) return "Not bad! Keep pushing, you've got so much potential waiting to be unlocked! 🔓💪";
+            if (cgpa >= 5) return "You made it through! Every step forward is progress. Next time, aim even higher! 🧗‍♂️";
+            return "Setbacks are just setups for comebacks. Don't lose heart, keep fighting! ❤️‍🩹✊";
+        };
+
+        const createRowHTML = (index) => {
+            return `
+                <div class="row-grid" id="row-${index}">
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <input type="text" class="input-control course-name" placeholder="Course Name (Optional)">
+                    </div>
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <input type="number" class="input-control course-credits" placeholder="Credits" min="1" max="10" required>
+                    </div>
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <select class="input-control course-grade" required>
+                            <option value="" disabled selected>Grade</option>
+                            <option value="S">S (10)</option>
+                            <option value="A">A (9)</option>
+                            <option value="B">B (8)</option>
+                            <option value="C">C (7)</option>
+                            <option value="D">D (6)</option>
+                            <option value="E">E (5)</option>
+                            <option value="F">F (0)</option>
+                        </select>
+                    </div>
+                    <button class="del-btn" onclick="deleteRow(${index})" title="Remove Course">
+                        🗑️
+                    </button>
+                </div>
+            `;
+        };
+
+        let rowCount = 0;
+        const addRow = () => {
+            document.getElementById('courseRows').insertAdjacentHTML('beforeend', createRowHTML(rowCount));
+            rowCount++;
+        };
+
+        const deleteRow = (index) => {
+            const row = document.getElementById(`row-${index}`);
+            if (row) row.remove();
+        };
+
+        // Initialize with 5 rows
+        for (let i = 0; i < 5; i++) {
+            addRow();
+        }
+
+        document.getElementById('addCourseBtn').addEventListener('click', addRow);
+
+        document.getElementById('calculateBtn').addEventListener('click', () => {
+            const creditsInputs = document.querySelectorAll('.course-credits');
+            const gradesInputs = document.querySelectorAll('.course-grade');
+            
+            let totalCredits = 0;
+            let totalGradePoints = 0;
+            let isValid = true;
+            let hasCourses = false;
+
+            for (let i = 0; i < creditsInputs.length; i++) {
+                const creditVal = parseFloat(creditsInputs[i].value);
+                const gradeVal = gradesInputs[i].value;
+
+                if (!isNaN(creditVal) && gradeVal) {
+                    hasCourses = true;
+                    totalCredits += creditVal;
+                    totalGradePoints += creditVal * gradePoints[gradeVal];
+                } else if (creditsInputs[i].value || gradeVal) {
+                    // if one is filled but not the other
+                    isValid = false;
+                    creditsInputs[i].style.borderColor = isNaN(creditVal) ? 'var(--danger)' : '';
+                    gradesInputs[i].style.borderColor = !gradeVal ? 'var(--danger)' : '';
+                }
+            }
+
+            if (!isValid) {
+                alert("Please fill both Credits and Grade for row inputs you wish to include, or leave both empty.");
+                return;
+            }
+
+            if (!hasCourses) {
+                alert("Please add at least one course with credits and a grade.");
+                return;
+            }
+
+            if (totalCredits === 0) {
+                alert("Total credits cannot be zero.");
+                return;
+            }
+
+            const cgpa = totalGradePoints / totalCredits;
+            
+            const resultContainer = document.getElementById('resultContainer');
+            document.getElementById('resultValue').textContent = cgpa.toFixed(2);
+            document.getElementById('resultQuote').textContent = getMotivationalQuote(cgpa);
+            
+            // Adjust colors based on CGPA
+            const resultNumber = document.getElementById('resultValue');
+            if (cgpa < 5) {
+                resultNumber.style.background = 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)';
+                resultContainer.style.background = 'rgba(239, 68, 68, 0.1)';
+                resultContainer.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+            } else if (cgpa < 8) {
+                resultNumber.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+                resultContainer.style.background = 'rgba(245, 158, 11, 0.1)';
+                resultContainer.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+            } else {
+                resultNumber.style.background = 'linear-gradient(135deg, #34d399 0%, #10b981 100%)';
+                resultContainer.style.background = 'rgba(16, 185, 129, 0.1)';
+                resultContainer.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+            }
+            
+            resultNumber.style.webkitBackgroundClip = 'text';
+            resultNumber.style.backgroundClip = 'text';
+            resultNumber.style.webkitTextFillColor = 'transparent';
+
+            resultContainer.style.display = 'block';
+            
+            // smoothly scroll to result
+            resultContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        });
+    </script>
+</body>
+</html>

@@ -6,130 +6,306 @@
     <title>Live Dashboard | Marks Dashboard</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .d-none { display: none !important; }
+
+        /* ── Dashboard-specific overrides ── */
+        .dash-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .dash-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .dash-header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .submissions-badge {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 0.8rem 1.5rem;
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .submissions-badge .badge-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-secondary);
+            margin-bottom: 0.2rem;
+        }
+
+        .submissions-badge .badge-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #10b981;
+        }
+
+        /* Interpretation panel */
+        .interp-panel {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-left: 4px solid var(--accent-primary);
+            border-radius: 16px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .interp-panel .interp-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-secondary);
+            margin-bottom: 0.4rem;
+        }
+
+        /* Raw scores tape */
+        .raw-scores-section {
+            margin-bottom: 2rem;
+        }
+
+        .raw-scores-section h3 {
+            font-size: 0.85rem;
+            margin-bottom: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .raw-scores-tape {
+            display: flex;
+            overflow-x: auto;
+            gap: 0.5rem;
+            padding-bottom: 0.5rem;
+        }
+
+        .score-pill {
+            background: rgba(109, 40, 217, 0.15);
+            border: 1px solid rgba(109, 40, 217, 0.3);
+            border-radius: 8px;
+            padding: 0.35rem 0.75rem;
+            font-family: 'Inter', monospace;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #c4b5fd;
+            white-space: nowrap;
+        }
+
+        /* Stat cards row */
+        .stat-cards-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card-item {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.25rem;
+            text-align: center;
+        }
+
+        .stat-card-item .sv {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 0.2rem;
+        }
+
+        .stat-card-item .sl {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-secondary);
+        }
+
+        .minmax-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+        }
+
+        .minmax-inner .mm-item { text-align: center; }
+        .minmax-inner .mm-item .sv { font-size: 2rem; }
+
+        /* Chart row */
+        .charts-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .charts-row { grid-template-columns: 1fr; }
+            .stat-cards-row { grid-template-columns: repeat(2, 1fr); }
+            .relative-section-inner { grid-template-columns: 1fr !important; }
+        }
+
+        .chart-panel {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+
+        .chart-panel h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            background: none;
+            -webkit-text-fill-color: unset;
+        }
+
+        /* Relative Grading Section */
+        .relative-grading-wrap {
+            margin-top: 2rem;
+        }
+
+        .relative-section-inner {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .grade-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .grade-table th, .grade-table td {
+            padding: 0.55rem 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.85rem;
+        }
+
+        .grade-table th {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    </style>
 </head>
 <body>
     <div class="bg-blobs"></div>
-    
-    <div class="container pb-2" style="max-width: 1400px;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem;">
+
+    <div class="dash-container">
+        <!-- ── Header ── -->
+        <div class="dash-header animate-fade-in">
             <div>
-                <h1 id="examTitle" style="margin-bottom: 0.5rem; font-size: 2.5rem;">Loading Session...</h1>
+                <h1 id="examTitle">Loading Session...</h1>
                 <p id="examSubtitle" style="margin: 0;">Anonymous Class Performance Analyzer</p>
             </div>
-            
-            <div class="glass-card" style="padding: 1rem 1.5rem; display: flex; align-items: center; gap: 1rem; border-radius: 12px;">
-                <div style="text-align: right;">
-                    <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Submissions</div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--success);" id="countDisplay">0/0</div>
+            <div class="submissions-badge">
+                <div class="badge-label">Submissions</div>
+                <div class="badge-value" id="countDisplay">0/0</div>
+            </div>
+        </div>
+
+        <!-- ── AI Interpretation ── -->
+        <div class="interp-panel animate-fade-in">
+            <div class="interp-label">AI Interpretation</div>
+            <p id="interpretationText" style="color: var(--text-primary); font-size: 1.05rem; font-weight: 500; margin: 0;">Waiting for data...</p>
+        </div>
+
+        <!-- ── Raw Scores Tape ── -->
+        <div class="raw-scores-section animate-fade-in">
+            <h3>📊 Raw Submitted Scores <span style="font-weight: 400; font-size: 0.8rem;">(Ascending)</span></h3>
+            <div id="raw-scores-bucket" class="raw-scores-tape">
+                <span style="color: var(--text-secondary); font-style: italic;">Awaiting submissions...</span>
+            </div>
+        </div>
+
+        <!-- ── Stat Cards ── -->
+        <div class="stat-cards-row animate-fade-in">
+            <div class="stat-card-item">
+                <div class="sv" id="statMean" style="color: #fff;">-</div>
+                <div class="sl">Average (Mean)</div>
+            </div>
+            <div class="stat-card-item">
+                <div class="sv" id="statMedian" style="color: #fff;">-</div>
+                <div class="sl">Median</div>
+            </div>
+            <div class="stat-card-item">
+                <div class="sv" id="statMode" style="color: #fff;">-</div>
+                <div class="sl">Mode</div>
+            </div>
+            <div class="stat-card-item">
+                <div class="sv" id="statStdDev" style="color: #10b981;">-</div>
+                <div class="sl">Std Deviation (Σ)</div>
+            </div>
+            <div class="stat-card-item">
+                <div class="minmax-inner">
+                    <div class="mm-item">
+                        <div class="sv" id="statLowest" style="color: #38bdf8;">-</div>
+                        <div class="sl">Lowest</div>
+                    </div>
+                    <div class="mm-item">
+                        <div class="sv" id="statHighest" style="color: #f472b6;">-</div>
+                        <div class="sl">Highest</div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div id="interpretation-panel" class="glass-card mb-2" style="padding: 1.5rem; border-left: 4px solid var(--accent-primary); margin-bottom: 2rem;">
-            <div style="font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 1px;">AI Interpretation</div>
-            <div id="interpretationText" style="font-size: 1.1rem; font-weight: 500;">Waiting for data...</div>
-        </div>
-
-        <!-- Stats Grid -->
-        <div class="dashboard-grid">
-            <div class="glass-card stat-card">
-                <div class="stat-value" id="statMean">-</div>
-                <div class="stat-label">Average (Mean)</div>
-            </div>
-            <div class="glass-card stat-card">
-                <div class="stat-value" id="statMedian">-</div>
-                <div class="stat-label">Median</div>
-            </div>
-            <div class="glass-card stat-card">
-                <div class="stat-value" id="statMode">-</div>
-                <div class="stat-label">Mode</div>
-            </div>
-            <div class="glass-card stat-card">
-                <div class="stat-value" id="statStdDev" style="color: var(--warning);">-</div>
-                <div class="stat-label">Std Deviation (σ)</div>
-            </div>
-            <div class="glass-card stat-card">
-                <div style="display: flex; justify-content: space-around; align-items: center;">
-                    <div>
-                        <div class="stat-value" id="statMin" style="font-size: 1.8rem; color: var(--danger);">-</div>
-                        <div class="stat-label">Lowest</div>
-                    </div>
-                    <div>
-                        <div class="stat-value" id="statMax" style="font-size: 1.8rem; color: var(--success);">-</div>
-                        <div class="stat-label">Highest</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Charts Grid -->
-        <div class="charts-grid">
-            <div class="glass-card" style="padding: 1.5rem;">
-                <h3 style="margin-bottom: 1.5rem; font-size: 1.2rem;">Score Distribution</h3>
-                <div style="height: 350px; position: relative;">
+        <!-- ── Score Distribution + Quartiles ── -->
+        <div class="charts-row animate-fade-in">
+            <div class="chart-panel">
+                <h3>Score Distribution</h3>
+                <div style="position: relative; height: 300px;">
                     <canvas id="histogramChart"></canvas>
                 </div>
             </div>
-            
-            <div class="glass-card" style="padding: 1.5rem;">
-                <h3 style="margin-bottom: 1.5rem; font-size: 1.2rem;">Quartiles Summary</h3>
-                <div style="display: flex; flex-direction: column; gap: 1.5rem; margin-top: 2rem;">
-                    <div>
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                            <span style="color: var(--text-secondary);">Q3 (75th Percentile)</span>
-                            <strong id="statQ3">-</strong>
-                        </div>
-                        <div style="height: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; overflow: hidden;">
-                            <div id="barQ3" style="height: 100%; width: 0%; background: var(--accent-secondary); transition: width 0.5s ease;"></div>
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                            <span style="color: var(--text-secondary);">Q2 (Median)</span>
-                            <strong id="statQ2">-</strong>
-                        </div>
-                        <div style="height: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; overflow: hidden;">
-                            <div id="barQ2" style="height: 100%; width: 0%; background: var(--accent-primary); transition: width 0.5s ease;"></div>
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                            <span style="color: var(--text-secondary);">Q1 (25th Percentile)</span>
-                            <strong id="statQ1">-</strong>
-                        </div>
-                        <div style="height: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; overflow: hidden;">
-                            <div id="barQ1" style="height: 100%; width: 0%; background: var(--warning); transition: width 0.5s ease;"></div>
-                        </div>
-                    </div>
+            <div class="chart-panel">
+                <h3>Quartiles Summary</h3>
+                <div style="position: relative; height: 300px;">
+                    <canvas id="quartilesChart"></canvas>
                 </div>
             </div>
         </div>
-        
-        <!-- Bell Curve Grid -->
-        <div id="relative-grading-container" class="dashboard-grid d-none" style="margin-top: 2rem;">
-            <div class="glass-card" style="padding: 1.5rem; grid-column: span 2;">
-                <h3 style="margin-bottom: 1.5rem; font-size: 1.2rem;">Relative Grading (100 Marks)</h3>
-                <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
-                    <div style="flex: 2; min-width: 300px; height: 350px; position: relative;">
+
+        <!-- ── Relative Grading (Bell Curve + Grade Table) ── -->
+        <div id="relative-grading-container" class="relative-grading-wrap d-none">
+            <div class="chart-panel">
+                <h3>Relative Grading (<span id="maxMarksLabel">100</span> Marks)</h3>
+                <div class="relative-section-inner">
+                    <div style="position: relative; height: 300px;">
                         <canvas id="bellCurveChart"></canvas>
                     </div>
-                    <div style="flex: 1; min-width: 250px;">
-                        <h4 style="margin-bottom: 1rem; color: var(--text-secondary);">Grade Boundaries</h4>
-                        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem;">
+                    <div>
+                        <h4 style="margin: 0 0 0.75rem 0; font-size: 0.95rem; color: var(--text-primary);">Grade Boundaries</h4>
+                        <table class="grade-table">
                             <thead>
-                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                    <th style="padding: 0.5rem; color: var(--text-secondary);">Grade</th>
-                                    <th style="padding: 0.5rem; color: var(--text-secondary);">Range</th>
+                                <tr>
+                                    <th>Grade</th>
+                                    <th>Range</th>
                                 </tr>
                             </thead>
-                            <tbody id="grade-table-body">
-                                <tr><td colspan="2" style="padding: 0.5rem; color: var(--text-secondary);">Calculating...</td></tr>
-                            </tbody>
+                            <tbody id="grade-table-body"></tbody>
                         </table>
-                        <p style="margin-top: 1.5rem; font-size: 0.75rem; color: var(--text-secondary); line-height: 1.4; padding: 0.75rem; background: rgba(0,0,0,0.2); border-radius: 6px;">
-                            <strong>Disclaimer:</strong> These grade thresholds are mathematical estimations based on current class performance and are prone to variation. Actual university results may differ.
+                        <p style="margin-top: 1rem; font-size: 0.75rem; color: var(--text-secondary); line-height: 1.5;">
+                            <strong>Disclaimer:</strong> These grade thresholds are mathematical estimations based on current class performance. Actual university results may differ.
                         </p>
                     </div>
                 </div>

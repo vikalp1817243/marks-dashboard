@@ -118,9 +118,31 @@
                 })
                 .then(data => {
                     document.getElementById('sessionTitle').textContent = data.name;
-                    document.getElementById('sessionInfo').innerHTML = `Max Marks: <strong style="color:var(--text-primary)">${data.max_marks}</strong> &nbsp;|&nbsp; Spots left: <strong style="color:var(--accent-secondary)">${data.spots_remaining} / ${data.class_size}</strong>`;
                     sessionMaxMarks = data.max_marks;
                     document.getElementById('scoreVal').max = sessionMaxMarks;
+
+                    if (data.spots_remaining <= 0) {
+                        // All spots filled — hide auth/form, show dashboard link only
+                        document.getElementById('auth-section').classList.add('d-none');
+                        document.getElementById('submitForm').classList.add('d-none');
+                        document.getElementById('sessionInfo').innerHTML =
+                            `Max Marks: <strong style="color:var(--text-primary)">${data.max_marks}</strong> &nbsp;|&nbsp; <strong style="color:var(--success);">All ${data.class_size} submissions received</strong>`;
+
+                        // Show a capacity-full section with dashboard link
+                        const fullSection = document.createElement('div');
+                        fullSection.className = 'text-center';
+                        fullSection.innerHTML = `
+                            <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem;">
+                                <p style="color: var(--success); margin: 0; font-weight: 600;">✅ All spots have been filled.</p>
+                                <p style="color: var(--text-secondary); margin: 0.5rem 0 0; font-size: 0.85rem;">This session has received all ${data.class_size} submissions.</p>
+                            </div>
+                            <a href="/dashboard.html?session=${sessionId}" class="btn btn-primary" style="width: 100%;">View Class Dashboard</a>
+                        `;
+                        document.querySelector('.glass-card').appendChild(fullSection);
+                    } else {
+                        document.getElementById('sessionInfo').innerHTML =
+                            `Max Marks: <strong style="color:var(--text-primary)">${data.max_marks}</strong> &nbsp;|&nbsp; Spots left: <strong style="color:var(--accent-secondary)">${data.spots_remaining} / ${data.class_size}</strong>`;
+                    }
                 })
                 .catch(err => {
                     document.getElementById('error-section').classList.remove('d-none');

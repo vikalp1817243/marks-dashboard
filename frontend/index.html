@@ -10,27 +10,53 @@
 <body>
     <div class="bg-blobs"></div>
     
-    <div class="container" style="display: flex; align-items: center; justify-content: center; min-height: 100vh;">
-        <div class="glass-card text-center animate-fade-in" style="max-width: 600px; width: 100%;">
-            <h1>Marks Dashboard</h1>
-            <p class="mb-2">A peer-driven, strictly anonymous platform for analyzing class performance. Exclusively for VIT Bhopal students.</p>
-            
-            <div style="display: flex; flex-direction: column; gap: 1rem; align-items: center;">
-                <a href="create.html" class="btn btn-primary" style="width: 80%;">
+    <div class="container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding-top: 2rem; padding-bottom: 2rem;">
+        <div class="text-center animate-fade-in" style="margin-bottom: 2.5rem; max-width: 700px;">
+            <h1 style="font-size: 3.5rem; margin-bottom: 0.5rem;">Marks Dashboard</h1>
+            <p style="font-size: 1.1rem; color: var(--text-secondary);">A peer-driven, strictly anonymous platform for analyzing class performance and calculating grades. Exclusively for VIT Bhopal students.</p>
+        </div>
+
+        <div class="animate-fade-in" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; width: 100%; max-width: 900px;">
+            <!-- Card 1: Exam Session -->
+            <div class="glass-card text-center" style="display: flex; flex-direction: column; height: 100%;">
+                <h2 style="margin-bottom: 1rem; font-size: 1.5rem;">Class Analytics</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 2rem; flex-grow: 1;">Create an anonymous session for your class. Get real-time statistics, bell curve insights, and relative grade estimations.</p>
+                
+                <a href="create.html" class="btn btn-primary" style="width: 100%; justify-content: center;">
                    ✨ Create Exam Session
                 </a>
                 
-                <p style="font-size: 0.9rem; margin: 0.5rem 0; color: var(--text-secondary);">Session creator will provide the link to submit marks.</p>
+                <p style="font-size: 0.85rem; margin-top: 1rem; color: var(--text-secondary);">Requires VIT Bhopal email login.</p>
             </div>
-            
-            <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--card-border);">
-                <div style="display: flex; justify-content: space-around; font-size: 0.9rem;">
+
+            <!-- Card 2: CGPA Calculator -->
+            <div class="glass-card text-center" style="display: flex; flex-direction: column; height: 100%;">
+                <h2 style="margin-bottom: 1rem; font-size: 1.5rem;">CGPA / SGPA Calci</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 2rem; flex-grow: 1;">Quickly calculate your SGPA or CGPA based on your individual performance without needing an account or database.</p>
+                
+                <a href="cgpa.html" class="btn btn-secondary" style="width: 100%; justify-content: center; background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.4); color: white; transition: all 0.3s ease;" onmouseover="this.style.background='rgba(59, 130, 246, 0.3)'" onmouseout="this.style.background='rgba(59, 130, 246, 0.15)'">
+                   🧮 Calculate CGPA
+                </a>
+                
+                <p style="font-size: 0.85rem; margin-top: 1rem; color: var(--text-secondary);">No login required. Fully standalone.</p>
+            </div>
+        </div>
+
+        <div class="animate-fade-in" style="margin-top: 3rem; width: 100%; max-width: 900px;">
+            <div class="glass-card text-center" style="padding: 1.5rem;">
+                <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 1rem; font-size: 0.95rem;">
                     <div>🔒 100% Anonymous</div>
                     <div>⏳ 24h Auto-Delete</div>
                     <div>📊 Real-time Stats</div>
+                    <div>📱 Mobile Friendly</div>
                 </div>
             </div>
         </div>
+
+        <footer style="text-align: center; margin-top: 3rem; color: var(--text-secondary); font-size: 0.9rem;">
+            &copy; 2026 Marks Dashboard. Strictly for VIT Bhopal Students. <br>
+            Version: v2.0.0
+        </footer>
     </div>
 </body>
 </html>

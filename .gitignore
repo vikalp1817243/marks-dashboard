@@ -1,26 +1,46 @@
-# Virtual environment
+# ───── Virtual Environment ─────
 .venv/
+venv/
+env/
 
-# Python
+# ───── Python Bytecode & Caches ─────
 __pycache__/
 *.pyc
 *.pyo
 .pytest_cache/
 
-# Environment variables
+# ───── Environment / Credentials (CRITICAL) ─────
 .env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
 
-# IDE
+# ───── IDE & Editor ─────
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 
-# OS
+# ───── OS Junk ─────
 .DS_Store
 Thumbs.db
 
-# guide
+# ───── Development / Scratch Files ─────
+check_*.py
+newgeminidasboard.txt
+*.log
+
+# ───── Guide / Documentation (not essential for deploy) ─────
 oauth_setup_guide.md
 Google_OAuth_Deployment_Guide.md
 Railway_Deployment_Guide.md
 SETUP_AND_DEVELOPMENT.md
 TiDB_Deployment_Guide.md
+LOCAL_DEV_SSO_GUIDE.md
+
+# ───── Agent / AI Metadata ─────
+.agentignore
+.gemini/

@@ -1,9 +1,15 @@
 import os
 import urllib.parse
+from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv()
+# Prefer .env.local for local development; fall back to .env for production
+_env_local = Path(__file__).parent / ".env.local"
+if _env_local.exists():
+    load_dotenv(_env_local)
+else:
+    load_dotenv()
 
 BASE_URL = os.getenv("BASE_URL", "http://localhost:8000").rstrip("/")
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "mock-client-id")
